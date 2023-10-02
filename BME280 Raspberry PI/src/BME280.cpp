@@ -31,7 +31,7 @@ bool BMP280::initialize()
     }
 
     // Check if BMP280 is connected properly
-    if (readU16(0xD0) != 0x58)
+    if (readU16(0xD0) != 0x76)
     {
         perror("BMP280 not found");
         return false;
