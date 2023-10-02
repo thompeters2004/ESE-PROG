@@ -3,22 +3,24 @@
 
 #include <cstdint>
 
-class BME280 {
+class BMP280
+{
 public:
-    BME280(uint8_t i2cAddress);
-    ~BME280();
+    BMP280(uint8_t i2cAddress = 0x76);
+    ~BMP280();
 
     bool initialize();
-    bool readTemperature(float &temperature);
-    bool readHumidity(float &humidity);
+    float readTemperature();
 
 private:
-    uint8_t _i2cAddress;
-    int _fd; // File descriptor for I2C bus
+    int fd;
+    uint8_t address;
+    int32_t t_fine;
 
-    bool read8(uint8_t reg, uint8_t &value);
-    bool read16(uint8_t reg, uint16_t &value);
-    bool write8(uint8_t reg, uint8_t value);
+    uint16_t readU16(uint8_t reg);
+    int32_t readS32(uint8_t reg);
+    bool readCalibrationData();
+    int32_t compensateTemperature(int32_t adc_T);
 };
 
 #endif // BME280_H
