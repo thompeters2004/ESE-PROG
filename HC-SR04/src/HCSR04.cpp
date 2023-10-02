@@ -1,33 +1,36 @@
-// HCSR04.cpp
 #include "HCSR04.h"
+#include <pigpio.h>
+#include <chrono>
+#include <thread>
 
 HCSR04::HCSR04(int triggerPin, int echoPin) : triggerPin(triggerPin), echoPin(echoPin) {
-    wiringPiSetup();
-    pinMode(triggerPin, OUTPUT);
-    pinMode(echoPin, INPUT);
+    if (gpioInitialise() < 0) {
+        // Initialization failed
+        throw "GPIO Initialization failed";
+    }
 
-    // Ensure trigger pin is low
-    digitalWrite(triggerPin, LOW);
-    delay(30);
+    gpioSetMode(triggerPin, PI_OUTPUT);
+    gpioSetMode(echoPin, PI_INPUT);
+    gpioWrite(triggerPin, PI_LOW);
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+}
+
+HCSR04::~HCSR04() {
+    gpioTerminate();
 }
 
 float HCSR04::getDistance() {
-    // Send a 10us HIGH pulse to the trigger pin
-    digitalWrite(triggerPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(triggerPin, LOW);
+    gpioWrite(triggerPin, PI_HIGH);
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
+    gpioWrite(triggerPin, PI_LOW);
 
-    // Wait for the echo pin to go HIGH
-    while (digitalRead(echoPin) == LOW);
+    uint32_t start, end;
+    while (gpioRead(echoPin) == 0)
+        start = gpioTick();
 
-    // Measure the duration the echo pin stays HIGH
-    auto start = std::chrono::high_resolution_clock::now();
-    while (digitalRead(echoPin) == HIGH);
-    auto end = std::chrono::high_resolution_clock::now();
+    while (gpioRead(echoPin) == 1)
+        end = gpioTick();
 
-    // Calculate the distance in cm
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-    float distance = duration * 0.0344 / 2;
-
-    return distance;
+    uint32_t diff = end - start;
+    return diff / 58.0;
 }
