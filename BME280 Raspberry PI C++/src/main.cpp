@@ -1,4 +1,6 @@
-#include <bme280.h>
+#include "bme280.h"
+
+using namespace std;
 
 int main()
 {
@@ -12,7 +14,7 @@ int main()
         float h = sensor.getHumidity();
         float a = sensor.getAltitude(p);
 
-        cout << "Sensor: bme280" << endl
+        std::cout << "Sensor: bme280" << endl
              << "Humidity: " << h << endl
              << "Pressure: " << p << endl
              << "Temperature: " << t << endl

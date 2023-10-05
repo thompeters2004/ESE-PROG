@@ -4,13 +4,7 @@
 
 using namespace std;
 
-class BME280
-{
-private:
-  int fd;
-  bme280_calib_data cal;
-
-  void readCalibrationData()
+  void BME280::readCalibrationData()
   {
     data->dig_T1 = (uint16_t)wiringPiI2CReadReg16(fd, BME280_REGISTER_DIG_T1);
     data->dig_T2 = (int16_t)wiringPiI2CReadReg16(fd, BME280_REGISTER_DIG_T2);
@@ -34,7 +28,7 @@ private:
     data->dig_H6 = (int8_t)wiringPiI2CReadReg8(fd, BME280_REGISTER_DIG_H6);
   }
 
-  int32_t getTemperatureCalibration(int32_t adc_T)
+  int32_t BME280::getTemperatureCalibration(int32_t adc_T)
   {
     int32_t var1 = ((((adc_T >> 3) - ((int32_t)cal->dig_T1 << 1))) *
                     ((int32_t)cal->dig_T2)) >>
@@ -49,13 +43,13 @@ private:
     return var1 + var2;
   }
 
-  float compensateTemperature(int32_t t_fine)
+  float BME280::compensateTemperature(int32_t t_fine)
   {
     float T = (t_fine * 5 + 128) >> 8;
     return T / 100;
   }
 
-  float compensatePressure(int32_t adc_P, int32_t t_fine)
+  float BME280::compensatePressure(int32_t adc_P, int32_t t_fine)
   {
     int64_t var1, var2, p;
 
@@ -80,7 +74,7 @@ private:
     return (float)p / 256;
   }
 
-  float compensateHumidity(int32_t adc_H, int32_t t_fine)
+  float BME280::compensateHumidity(int32_t adc_H, int32_t t_fine)
   {
     int32_t v_x1_u32r;
 
@@ -108,7 +102,7 @@ private:
     return h / 1024.0;
   }
 
-  void getRawData(bme280_raw_data &raw)
+  void BME280::getRawData(bme280_raw_data &raw)
   {
     wiringPiI2CWrite(fd, 0xf7);
 
@@ -138,8 +132,7 @@ private:
     raw->humidity = (raw->humidity | raw->hlsb);
   }
 
-public:
-  BME280()
+  BME280::BME280()
   {
     fd = wiringPiI2CSetup(BME280_ADDRESS);
     if (fd < 0)
@@ -149,13 +142,13 @@ public:
     readCalibrationData();
   }
 
-  void setup()
+  void BME280::setup()
   {
     wiringPiI2CWriteReg8(fd, 0xf2, 0x01); // humidity oversampling x 1
     wiringPiI2CWriteReg8(fd, 0xf4, 0x25); // pressure and temperature oversampling x 1, mode normal
   }
 
-  float getTemperature()
+  float BME280::getTemperature()
   {
     bme280_raw_data raw;
     getRawData(raw);
@@ -163,7 +156,7 @@ public:
     return compensateTemperature(t_fine);
   }
 
-  float getPressure()
+  float BME280::getPressure()
   {
     bme280_raw_data raw;
     getRawData(raw);
@@ -171,7 +164,7 @@ public:
     return compensatePressure(raw.pressure, &cal, t_fine) / 100;
   }
 
-  float getHumidity()
+  float BME280::getHumidity()
   {
     bme280_raw_data raw;
     getRawData(raw);
@@ -179,36 +172,7 @@ public:
     return compensateHumidity(raw.humidity, &cal, t_fine);
   }
 
-  float getAltitude(float pressure)
+  float BME280::getAltitude(float pressure)
   {
     return 44330.0 * (1.0 - pow(pressure / MEAN_SEA_LEVEL_PRESSURE, 0.190294957));
   }
-};
-
-int main()
-{
-  try
-  {
-    BME280 sensor;
-    sensor.setup();
-
-    float t = sensor.getTemperature();
-    float p = sensor.getPressure();
-    float h = sensor.getHumidity();
-    float a = sensor.getAltitude(p);
-
-    cout << "Sensor: bme280" << endl
-         << "Humidity: " << h << endl
-         << "Pressure: " << p << endl
-         << "Temperature: " << t << endl
-         << "Altitude: " << a << endl
-         << "Timestamp: " << static_cast<int>(time(NULL)) << endl;
-  }
-  catch (const runtime_error &e)
-  {
-    cerr << e.what() << endl;
-    return -1;
-  }
-
-  return 0;
-}
