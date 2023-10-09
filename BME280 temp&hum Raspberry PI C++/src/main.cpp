@@ -15,6 +15,9 @@ int main() {
     float humidity = sensor.readHumidity();
     std::cout << "Temperature: " << temperature << " °C" << std::endl;
     std::cout << "Humidity: " << humidity << " %" << std::endl;
+    
+    
+    delay(1000);
 }
 
     return 0;

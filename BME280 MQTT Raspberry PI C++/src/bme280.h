@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <unistd.h>
 #include <wiringPi.h>
+#include <iostream>
+#include <mosquitto.h>
+#include <cstring>
 
 class BME280 {
 public:
