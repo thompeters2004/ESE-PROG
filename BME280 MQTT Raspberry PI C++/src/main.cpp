@@ -10,7 +10,7 @@ int main() {
 
     // Mosquitto initialization
     mosquitto_lib_init();
-    struct mosquitto *mosq = mosquitto_new("hello", true, NULL);
+    struct mosquitto *mosq = mosquitto_new("test", true, NULL);
     if (!mosq) {
         std::cerr << "Failed to create Mosquitto instance" << std::endl;
         return 1;
@@ -19,7 +19,7 @@ int main() {
     const char *mqtt_host = "192.168.178.25"; // Change this to your MQTT broker IP/hostname
     int mqtt_port = 1883; // Default MQTT port, change if needed
     const char *mqtt_username = "thompeters2004";
-    const char *mqtt_password = "Daatje1.Spetter2";
+    const char *mqtt_password = "thompeters2004";
 
     mosquitto_username_pw_set(mosq, mqtt_username, mqtt_password);
 
@@ -41,8 +41,8 @@ int main() {
         snprintf(temp_payload, sizeof(temp_payload), "Temperature: %.2f °C", temperature);
         snprintf(hum_payload, sizeof(hum_payload), "Humidity: %.2f %%", humidity);
 
-        mosquitto_publish(mosq, NULL, "hello", strlen(temp_payload), temp_payload, 0, false);
-        mosquitto_publish(mosq, NULL, "hello", strlen(hum_payload), hum_payload, 0, false);
+        mosquitto_publish(mosq, NULL, "test", strlen(temp_payload), temp_payload, 0, false);
+        mosquitto_publish(mosq, NULL, "test", strlen(hum_payload), hum_payload, 0, false);
 
         delay(1000);
     }
