@@ -1,4 +1,5 @@
 #include "bme280.h"
+#include "MQTTWrapper.h"
 
 int main() {
     BME280 sensor;
@@ -8,25 +9,8 @@ int main() {
         return 1;
     }
 
-    // Mosquitto initialization
-    mosquitto_lib_init();
-    struct mosquitto *mosq = mosquitto_new("test", true, NULL);
-    if (!mosq) {
-        std::cerr << "Failed to create Mosquitto instance" << std::endl;
-        return 1;
-    }
-
-    const char *mqtt_host = "192.168.178.25"; // Change this to your MQTT broker IP/hostname
-    int mqtt_port = 1883; // Default MQTT port, change if needed
-    const char *mqtt_username = "thompeters2004";
-    const char *mqtt_password = "thompeters2004";
-
-    mosquitto_username_pw_set(mosq, mqtt_username, mqtt_password);
-
-    if (mosquitto_connect(mosq, mqtt_host, mqtt_port, 60) != MOSQ_ERR_SUCCESS) {
-        std::cerr << "Failed to connect to MQTT broker" << std::endl;
-        mosquitto_destroy(mosq);
-        mosquitto_lib_cleanup();
+    MQTTWrapper mqtt("test", "192.168.178.25", 1883, "thompeters2004", "thompeters2004");
+    if (!mqtt.connect()) {
         return 1;
     }
 
@@ -41,15 +25,11 @@ int main() {
         snprintf(temp_payload, sizeof(temp_payload), "Temperature: %.2f °C", temperature);
         snprintf(hum_payload, sizeof(hum_payload), "Humidity: %.2f %%", humidity);
 
-        mosquitto_publish(mosq, NULL, "test", strlen(temp_payload), temp_payload, 0, false);
-        mosquitto_publish(mosq, NULL, "test", strlen(hum_payload), hum_payload, 0, false);
+        mqtt.publish("test", temp_payload);
+        mqtt.publish("test", hum_payload);
 
         delay(1000);
     }
-
-    mosquitto_disconnect(mosq);
-    mosquitto_destroy(mosq);
-    mosquitto_lib_cleanup();
 
     return 0;
 }
